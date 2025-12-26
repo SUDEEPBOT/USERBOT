@@ -1,24 +1,27 @@
 FROM python:3.9-slim-bullseye
 
-# Working directory set karte hain
+# Working directory
 WORKDIR /app/
 
-# System dependencies update aur install
-# Maine yahan 'pkg-config', 'libcairo2-dev', 'build-essential' add kiya hai
-# jo aapke pichle error (pycairo failure) ko fix karega.
+# Timezone set karein (Important for Pyrogram)
+ENV TZ=Asia/Kolkata
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# System dependencies install
+# Added 'tzdata' for time synchronization
 RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y git curl python3-pip ffmpeg \
+    apt-get install -y --no-install-recommends \
+    git curl python3-pip ffmpeg \
     libcairo2-dev pkg-config python3-dev build-essential \
-    && apt-get clean
+    tzdata \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Pehle sirf requirements copy kar rahe hain (Build speed badhane ke liye)
+# Requirements install
 COPY requirements.txt .
-
-# Pip update aur requirements install
 RUN pip3 install -U pip
-RUN pip3 install -U -r requirements.txt
+RUN pip3 install --no-cache-dir -U -r requirements.txt
 
-# Ab baaki saara code copy karein
+# Copy code
 COPY . .
 
 # Start command
